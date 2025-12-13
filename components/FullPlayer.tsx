@@ -1,0 +1,221 @@
+import React, { useState, useEffect } from 'react';
+import { Song } from '../types';
+import { Play, Pause, SkipBack, SkipForward, Volume2, ChevronDown, Repeat, Shuffle, Sparkles, Loader2, Info } from 'lucide-react';
+import { generateSongVibe } from '../services/geminiService';
+
+interface FullPlayerProps {
+  song: Song;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  currentTime: number;
+  duration: number;
+  onSeek: (time: number) => void;
+  volume: number;
+  onVolumeChange: (volume: number) => void;
+  onClose: () => void;
+}
+
+export const FullPlayer: React.FC<FullPlayerProps> = ({
+  song,
+  isPlaying,
+  onTogglePlay,
+  currentTime,
+  duration,
+  onSeek,
+  volume,
+  onVolumeChange,
+  onClose,
+}) => {
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Reset analysis when song changes
+  useEffect(() => {
+    setAnalysis(null);
+    setIsAnalyzing(false);
+  }, [song.id]);
+
+  const handleAnalyze = async () => {
+    if (analysis) {
+      setAnalysis(null); // Toggle off if already showing
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    try {
+      // Use the artist + name for better context if available
+      const query = song.artist && song.artist !== 'Unknown Artist' 
+        ? `${song.name} by ${song.artist}` 
+        : song.name;
+        
+      const result = await generateSongVibe(query);
+      setAnalysis(result);
+    } catch (e) {
+      setAnalysis("Could not analyze track.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const progressPercent = (currentTime / (duration || 1)) * 100;
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-zinc-950/95 backdrop-blur-xl flex flex-col transition-all duration-300 animate-[fadeIn_0.3s_ease-out]">
+      {/* Background Ambience based on Cover - Monochromed and Reduced */}
+      {song.coverUrl && (
+        <div 
+          className="absolute inset-0 z-0 opacity-5 blur-[120px] scale-125 pointer-events-none grayscale"
+          style={{ backgroundImage: `url(${song.coverUrl})`, backgroundPosition: 'center', backgroundSize: 'cover' }}
+        ></div>
+      )}
+
+      {/* Header */}
+      <div className="relative z-10 flex items-center justify-between p-6">
+        <button 
+          onClick={onClose} 
+          className="p-2 text-slate-500 hover:text-white transition rounded-lg hover:bg-white/5"
+        >
+          <ChevronDown className="w-8 h-8" />
+        </button>
+        <div className="text-center">
+          <h2 className="text-xs font-bold tracking-widest text-slate-600 uppercase">Now Playing</h2>
+          <p className="text-sm font-medium text-slate-300 line-clamp-1">{song.name}</p>
+        </div>
+        
+        {/* AI Analysis Toggle */}
+        <button 
+          onClick={handleAnalyze}
+          disabled={isAnalyzing}
+          className={`p-2 transition rounded-lg hover:bg-white/10 ${
+            analysis ? 'text-sky-400 bg-sky-900/20' : 'text-slate-400 hover:text-sky-300'
+          }`}
+          title="AI Sonic Analysis"
+        >
+          {isAnalyzing ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Sparkles className="w-6 h-6" />
+          )}
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 pb-8 w-full max-w-2xl mx-auto">
+        
+        {/* Album Art / Visualizer */}
+        <div className="relative w-72 h-72 md:w-96 md:h-96 mb-12 group perspective-[1000px]">
+          {/* Ambient Glow behind art - Greatly Reduced */}
+          <div className={`absolute inset-0 bg-sky-900/10 blur-3xl rounded-full transition-all duration-1000 ease-in-out ${isPlaying ? 'opacity-40 scale-105' : 'opacity-0 scale-90'}`}></div>
+
+          {/* Art Container */}
+          <div className={`relative w-full h-full rounded shadow-2xl overflow-hidden ring-1 ring-white/5 transform transition-all duration-[3s] ease-in-out ${isPlaying && !analysis ? 'scale-[1.01]' : 'scale-100'}`}>
+               
+             {song.coverUrl ? (
+               <img 
+                 src={song.coverUrl} 
+                 alt="Album Art" 
+                 className="w-full h-full object-cover"
+               />
+             ) : (
+               <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                  <div className={`w-3/4 h-3/4 rounded-full bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center border border-white/5 shadow-inner ${isPlaying ? 'animate-[spin_8s_linear_infinite]' : ''}`}>
+                      <div className="w-1/3 h-1/3 rounded-full bg-sky-900/10 blur-xl"></div>
+                      <span className="text-4xl text-slate-700 absolute">♪</span>
+                  </div>
+               </div>
+             )}
+             
+             {/* Shine Effect */}
+             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
+
+             {/* AI Analysis Overlay */}
+             {analysis && (
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-[fadeIn_0.3s_ease-out]">
+                   <div className="mb-4 p-2 bg-sky-500/10 rounded-full">
+                      <Sparkles className="w-6 h-6 text-sky-400" />
+                   </div>
+                   <h3 className="text-white font-heading text-xl mb-3">Sonic Insight</h3>
+                   <p className="text-zinc-300 text-sm leading-relaxed font-light">
+                      {analysis}
+                   </p>
+                </div>
+             )}
+          </div>
+        </div>
+
+        {/* Track Info */}
+        <div className="text-center mb-10 w-full">
+          <h1 className="text-2xl md:text-3xl font-medium text-white mb-2 truncate px-4 tracking-tight">{song.name}</h1>
+          <p className="text-lg text-slate-500">{song.artist || "Unknown Artist"}</p>
+        </div>
+
+        {/* Custom Progress Bar */}
+        <div className="w-full mb-8 relative group">
+           {/* Visual Track Background */}
+           <div className="h-1 w-full bg-slate-800 rounded-sm overflow-visible relative">
+              {/* Filled Track - Single Color */}
+              <div 
+                className="absolute left-0 top-0 h-full bg-sky-500 rounded-sm transition-all duration-100 ease-linear"
+                style={{ width: `${progressPercent}%` }}
+              >
+                  {/* Glowing Tip/Thumb - Reduced Glow */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] scale-0 group-hover:scale-100 transition-transform duration-200"></div>
+              </div>
+           </div>
+
+           {/* Invisible Interactive Range Input */}
+           <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            value={currentTime}
+            onChange={(e) => onSeek(parseFloat(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          
+          <div className="flex justify-between mt-3 text-xs text-slate-500 font-mono tracking-wider">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center justify-between w-full max-w-sm mb-12">
+           <button className="text-slate-600 hover:text-sky-500 transition p-2"><Shuffle className="w-5 h-5" /></button>
+           <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipBack className="w-8 h-8" /></button>
+           
+           <button 
+             onClick={onTogglePlay}
+             className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-lg shadow-white/5"
+           >
+             {isPlaying ? <Pause className="w-6 h-6 fill-black text-black" /> : <Play className="w-6 h-6 fill-black text-black ml-1" />}
+           </button>
+           
+           <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipForward className="w-8 h-8" /></button>
+           <button className="text-slate-600 hover:text-sky-500 transition p-2"><Repeat className="w-5 h-5" /></button>
+        </div>
+
+        {/* Volume */}
+        <div className="flex items-center gap-4 w-full max-w-xs px-4 py-3 bg-zinc-900/50 rounded-lg border border-white/5">
+           <Volume2 className="w-4 h-4 text-slate-500" />
+           <input
+             type="range"
+             min="0"
+             max="1"
+             step="0.01"
+             value={volume}
+             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+             className="flex-1 h-1 bg-slate-700 rounded-sm appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-slate-400 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2"
+           />
+        </div>
+
+      </div>
+    </div>
+  );
+};
