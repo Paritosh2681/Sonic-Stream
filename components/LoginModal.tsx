@@ -62,6 +62,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
+    
+    // CRITICAL FIX: Force sign out first.
+    // This clears any stale 'sb-access-token' cookies that might be confusing the OAuth callback.
+    await supabase.auth.signOut();
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -71,8 +76,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
             // CRITICAL FIX: Forces Google to show the account chooser.
             // This prevents the "403: You do not have access" error caused by 
             // the browser defaulting to a different logged-in Google account.
+            access_type: 'offline',
             prompt: 'select_account',
-            access_type: 'offline'
+            include_granted_scopes: 'true'
           }
         }
       });
