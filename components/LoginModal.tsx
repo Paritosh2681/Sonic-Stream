@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
 import { X, Lock, Mail, AlertCircle, UserX } from 'lucide-react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -30,6 +30,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSupabaseConfigured) {
+        setError("Backend is not configured. Please continue as Guest.");
+        return;
+    }
     if (!email.trim() || !password.trim()) return;
     
     setLoading(true);
@@ -60,6 +64,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
   };
 
   const handleGoogleLogin = async () => {
+    if (!isSupabaseConfigured) {
+        setError("Backend is not configured. Please continue as Guest.");
+        return;
+    }
     setLoading(true);
     setError(null);
     
@@ -126,6 +134,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
           {isSignUp ? 'Sign up to sync your preferences' : 'Sign in to access your library'}
         </p>
 
+        {!isSupabaseConfigured && (
+          <div className="mb-6 p-3 bg-amber-900/20 border border-amber-900/50 rounded flex items-start gap-3 text-amber-200 text-sm">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <span className="leading-snug">Backend not configured. Auth features are disabled. Please use Guest Mode.</span>
+          </div>
+        )}
+
         {error && (
           <div className="mb-6 p-3 bg-red-900/20 border border-red-900/50 rounded flex items-start gap-3 text-red-200 text-sm">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -137,7 +152,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-zinc-100 text-zinc-900 font-medium px-6 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-white mb-6"
+          disabled={!isSupabaseConfigured}
+          className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-zinc-100 text-zinc-900 font-medium px-6 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-white mb-6 ${!isSupabaseConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -175,7 +191,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-black/40 border border-zinc-700 rounded-md py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
+                disabled={!isSupabaseConfigured}
+                className="w-full bg-black/40 border border-zinc-700 rounded-md py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="you@example.com"
                 required
               />
@@ -190,7 +207,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-black/40 border border-zinc-700 rounded-md py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
+                disabled={!isSupabaseConfigured}
+                className="w-full bg-black/40 border border-zinc-700 rounded-md py-3 pl-10 pr-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -198,7 +216,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
             </div>
           </div>
 
-          <Button type="submit" fullWidth disabled={loading}>
+          <Button type="submit" fullWidth disabled={loading || !isSupabaseConfigured}>
             {loading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Sign Up' : 'Sign In')}
           </Button>
         </form>
@@ -216,7 +234,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuest
 
         <div className="mt-4 text-center text-sm text-slate-600">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{' '}
-            <button onClick={toggleMode} className="text-sky-500 hover:text-sky-400 font-medium hover:underline">
+            <button onClick={toggleMode} disabled={!isSupabaseConfigured} className="text-sky-500 hover:text-sky-400 font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed">
               {isSignUp ? "Sign In" : "Sign Up"}
             </button>
         </div>

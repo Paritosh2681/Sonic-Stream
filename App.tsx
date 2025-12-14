@@ -11,7 +11,7 @@ import { Library } from './components/Library';
 import { Docs } from './components/Docs';
 import { Song, User } from './types';
 import { extractMetadata } from './services/metadataService';
-import { supabase } from './services/supabaseClient';
+import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 import { uploadTrack, fetchUserTracks } from './services/storageService';
 import { AlertCircle, CheckCircle, X } from 'lucide-react';
 
@@ -64,6 +64,8 @@ const App: React.FC = () => {
   // Define refreshLibrary using useCallback
   const refreshLibrary = useCallback(async (userId: string) => {
     if (userId === 'guest') return; // Guests don't sync
+    if (!isSupabaseConfigured) return; // Skip if no backend
+
     try {
       console.log("Syncing library for user:", userId);
       const remoteTracks = await fetchUserTracks(userId);
@@ -75,6 +77,11 @@ const App: React.FC = () => {
 
   // Initialize Supabase Auth Listener & Fetch Library
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      console.log("Supabase not configured (Offline Mode). Auth disabled.");
+      return;
+    }
+
     // Helper to sync user and library
     const syncUserSession = async (sessionUser: any) => {
       if (sessionUser) {
@@ -98,9 +105,13 @@ const App: React.FC = () => {
     };
 
     // 1. Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      syncUserSession(session?.user);
-    });
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        syncUserSession(data?.session?.user);
+      })
+      .catch(err => {
+        console.warn("Supabase auth check failed (offline mode):", err);
+      });
 
     // 2. Listen for auth changes
     const {
@@ -128,8 +139,12 @@ const App: React.FC = () => {
       setView('home');
       return;
     }
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error.message);
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error('Error signing out:', error.message);
+    } else {
+      setUser(null);
+    }
   };
 
   const handleGuestLogin = () => {
@@ -156,8 +171,8 @@ const App: React.FC = () => {
     let artist = 'Unknown Artist';
     let coverUrl: string | undefined = undefined;
 
-    // GUEST MODE UPLOAD LOGIC
-    if (user.id === 'guest') {
+    // GUEST MODE or NO BACKEND MODE
+    if (user.id === 'guest' || !isSupabaseConfigured) {
         try {
           const metadata = await extractMetadata(file);
           title = metadata.title || title;
@@ -179,7 +194,12 @@ const App: React.FC = () => {
           setCurrentSong(guestSong);
           setIsPlaying(true);
           setView('library');
-          showNotification("Playing local track (Guest Mode)", 'success');
+          
+          if (!isSupabaseConfigured && user.id !== 'guest') {
+             showNotification("Backend not connected. Playing locally.", 'info');
+          } else {
+             showNotification("Playing local track (Guest Mode)", 'success');
+          }
         } catch (e) {
           showNotification("Failed to load local file", 'error');
         } finally {
