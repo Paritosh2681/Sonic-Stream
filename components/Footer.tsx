@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Heart } from 'lucide-react';
+import { Github } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -23,13 +23,14 @@ export const Footer: React.FC = () => {
 
           <div className="flex flex-col md:items-end gap-6 pt-2">
              <div className="flex items-center gap-6">
-                <a href="#" className="flex items-center gap-2 text-zinc-600 hover:text-white transition-colors group">
+                <a 
+                  href="https://github.com/Paritosh2681/Music-Player-" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-zinc-600 hover:text-white transition-colors group"
+                >
                   <Github className="w-4 h-4" />
                   <span className="text-sm group-hover:underline decoration-zinc-700 underline-offset-4">Source Code</span>
-                </a>
-                <a href="#" className="flex items-center gap-2 text-zinc-600 hover:text-sky-400 transition-colors group">
-                  <Heart className="w-4 h-4" />
-                  <span className="text-sm group-hover:underline decoration-zinc-700 underline-offset-4">Support</span>
                 </a>
              </div>
              
