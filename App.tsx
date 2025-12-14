@@ -272,7 +272,20 @@ const App: React.FC = () => {
   };
 
   const onLoadedMetadata = () => {
-    if (audioRef.current) setDuration(audioRef.current.duration);
+    if (audioRef.current) {
+        setDuration(audioRef.current.duration);
+        // Force volume application on metadata load
+        audioRef.current.volume = volume;
+    }
+  };
+  
+  const handleAudioError = (e: any) => {
+    console.error("Audio playback error:", e);
+    // Only show notification if we actually have a song loaded
+    if (currentSong) {
+        showNotification("Error playing audio file. Format may be unsupported.", 'error');
+        setIsPlaying(false);
+    }
   };
 
   const onSeek = (time: number) => {
@@ -296,17 +309,26 @@ const App: React.FC = () => {
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
-        audioRef.current.play().catch(e => {
-            console.error("Playback error", e);
-            setIsPlaying(false);
-        });
+        // We use a promise check to prevent "The play() request was interrupted" errors
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.error("Playback start error:", e);
+                // Don't auto-pause here immediately to avoid UI flickering if it's just a race condition
+                // But if it's "NotAllowedError", we should probably pause UI
+                if (e.name === 'NotAllowedError') {
+                    setIsPlaying(false);
+                    showNotification("Autoplay blocked. Click play to start.", 'info');
+                }
+            });
+        }
       } else {
         audioRef.current.pause();
       }
     }
   }, [isPlaying, currentSong]);
 
-  // Sync volume on load
+  // Sync volume on load - ensuring it's always applied
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, currentSong]);
@@ -325,14 +347,16 @@ const App: React.FC = () => {
       )}
 
       {/* Invisible Audio Element: The Single Source of Truth */}
+      {/* Removed crossOrigin="anonymous" to fix Blob URL playback on some browsers */}
       {currentSong && (
         <audio 
           ref={audioRef}
           src={currentSong.url}
+          preload="auto"
           onTimeUpdate={onTimeUpdate}
           onLoadedMetadata={onLoadedMetadata}
+          onError={handleAudioError}
           onEnded={() => setIsPlaying(false)}
-          crossOrigin="anonymous" 
         />
       )}
 
