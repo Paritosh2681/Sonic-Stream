@@ -44,7 +44,7 @@ export const FullPlayer: React.FC<FullPlayerProps> = ({
       )}
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between p-6">
+      <div className="relative z-10 flex items-center justify-between p-6 shrink-0">
         <button 
           onClick={onClose} 
           className="p-2 text-slate-500 hover:text-white transition rounded-lg hover:bg-white/5"
@@ -56,107 +56,109 @@ export const FullPlayer: React.FC<FullPlayerProps> = ({
           <p className="text-sm font-medium text-slate-300 line-clamp-1">{song.name}</p>
         </div>
         
-        {/* Empty div to balance the header since AI button is removed */}
+        {/* Empty div to balance the header */}
         <div className="w-12"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 pb-8 w-full max-w-2xl mx-auto">
+      {/* Main Content - Flex layout with Gap for responsiveness */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 w-full max-w-3xl mx-auto overflow-y-auto">
+        <div className="w-full flex flex-col items-center gap-6 md:gap-8 h-full justify-center min-h-[500px]">
         
-        {/* Album Art / Visualizer */}
-        <div className="relative w-72 h-72 md:w-96 md:h-96 mb-12 group perspective-[1000px]">
-          {/* Ambient Glow behind art - Greatly Reduced */}
-          <div className={`absolute inset-0 bg-sky-900/10 blur-3xl rounded-full transition-all duration-1000 ease-in-out ${isPlaying ? 'opacity-40 scale-105' : 'opacity-0 scale-90'}`}></div>
+          {/* Album Art / Visualizer - Responsive Height Constraints */}
+          <div className="relative aspect-square w-full max-w-[280px] md:max-w-[380px] max-h-[35vh] md:max-h-[45vh] group perspective-[1000px] shrink-0">
+            {/* Ambient Glow behind art - Greatly Reduced */}
+            <div className={`absolute inset-0 bg-sky-900/10 blur-3xl rounded-full transition-all duration-1000 ease-in-out ${isPlaying ? 'opacity-40 scale-105' : 'opacity-0 scale-90'}`}></div>
 
-          {/* Art Container */}
-          <div className={`relative w-full h-full rounded shadow-2xl overflow-hidden ring-1 ring-white/5 transform transition-all duration-[3s] ease-in-out ${isPlaying ? 'scale-[1.01]' : 'scale-100'}`}>
-               
-             {song.coverUrl ? (
-               <img 
-                 src={song.coverUrl} 
-                 alt="Album Art" 
-                 className="w-full h-full object-cover"
-               />
-             ) : (
-               <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
-                  <div className={`w-3/4 h-3/4 rounded-full bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center border border-white/5 shadow-inner ${isPlaying ? 'animate-[spin_8s_linear_infinite]' : ''}`}>
-                      <div className="w-1/3 h-1/3 rounded-full bg-sky-900/10 blur-xl"></div>
-                      <span className="text-4xl text-slate-700 absolute">♪</span>
-                  </div>
-               </div>
-             )}
-             
-             {/* Shine Effect */}
-             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
+            {/* Art Container */}
+            <div className={`relative w-full h-full rounded shadow-2xl overflow-hidden ring-1 ring-white/5 transform transition-all duration-[3s] ease-in-out ${isPlaying ? 'scale-[1.01]' : 'scale-100'}`}>
+                
+              {song.coverUrl ? (
+                <img 
+                  src={song.coverUrl} 
+                  alt="Album Art" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                    <div className={`w-3/4 h-3/4 rounded-full bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center border border-white/5 shadow-inner ${isPlaying ? 'animate-[spin_8s_linear_infinite]' : ''}`}>
+                        <div className="w-1/3 h-1/3 rounded-full bg-sky-900/10 blur-xl"></div>
+                        <span className="text-4xl text-slate-700 absolute">♪</span>
+                    </div>
+                </div>
+              )}
+              
+              {/* Shine Effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
+            </div>
           </div>
-        </div>
 
-        {/* Track Info */}
-        <div className="text-center mb-10 w-full">
-          <h1 className="text-2xl md:text-3xl font-medium text-white mb-2 truncate px-4 tracking-tight">{song.name}</h1>
-          <p className="text-lg text-slate-500">{song.artist || "Unknown Artist"}</p>
-        </div>
+          {/* Track Info */}
+          <div className="text-center w-full shrink-0">
+            <h1 className="text-2xl md:text-3xl font-medium text-white mb-2 truncate px-4 tracking-tight">{song.name}</h1>
+            <p className="text-lg text-slate-500">{song.artist || "Unknown Artist"}</p>
+          </div>
 
-        {/* Custom Progress Bar */}
-        <div className="w-full mb-8 relative group">
-           {/* Visual Track Background */}
-           <div className="h-1 w-full bg-slate-800 rounded-sm overflow-visible relative">
-              {/* Filled Track - Single Color */}
-              <div 
-                className="absolute left-0 top-0 h-full bg-sky-500 rounded-sm transition-all duration-100 ease-linear"
-                style={{ width: `${progressPercent}%` }}
-              >
-                  {/* Glowing Tip/Thumb - Reduced Glow */}
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] scale-0 group-hover:scale-100 transition-transform duration-200"></div>
-              </div>
-           </div>
+          {/* Custom Progress Bar */}
+          <div className="w-full max-w-2xl relative group shrink-0 px-4 md:px-0">
+            {/* Visual Track Background */}
+            <div className="h-1 w-full bg-slate-800 rounded-sm overflow-visible relative">
+                {/* Filled Track - Single Color */}
+                <div 
+                  className="absolute left-0 top-0 h-full bg-sky-500 rounded-sm transition-all duration-100 ease-linear"
+                  style={{ width: `${progressPercent}%` }}
+                >
+                    {/* Glowing Tip/Thumb - Reduced Glow */}
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] scale-0 group-hover:scale-100 transition-transform duration-200"></div>
+                </div>
+            </div>
 
-           {/* Invisible Interactive Range Input */}
-           <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            value={currentTime}
-            onChange={(e) => onSeek(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-          />
+            {/* Invisible Interactive Range Input */}
+            <input
+              type="range"
+              min="0"
+              max={duration || 100}
+              value={currentTime}
+              onChange={(e) => onSeek(parseFloat(e.target.value))}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            
+            <div className="flex justify-between mt-3 text-xs text-slate-500 font-mono tracking-wider">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between w-full max-w-sm shrink-0">
+            <button className="text-slate-600 hover:text-sky-500 transition p-2"><Shuffle className="w-5 h-5" /></button>
+            <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipBack className="w-8 h-8" /></button>
+            
+            <button 
+              onClick={onTogglePlay}
+              className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-lg shadow-white/5"
+            >
+              {isPlaying ? <Pause className="w-6 h-6 fill-black text-black" /> : <Play className="w-6 h-6 fill-black text-black ml-1" />}
+            </button>
+            
+            <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipForward className="w-8 h-8" /></button>
+            <button className="text-slate-600 hover:text-sky-500 transition p-2"><Repeat className="w-5 h-5" /></button>
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-4 w-full max-w-xs px-4 py-3 bg-zinc-900/50 rounded-lg border border-white/5 shrink-0">
+            <Volume2 className="w-4 h-4 text-slate-500" />
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+              className="flex-1 h-1 bg-slate-700 rounded-sm appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-slate-400 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2"
+            />
+          </div>
           
-          <div className="flex justify-between mt-3 text-xs text-slate-500 font-mono tracking-wider">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
         </div>
-
-        {/* Controls */}
-        <div className="flex items-center justify-between w-full max-w-sm mb-12">
-           <button className="text-slate-600 hover:text-sky-500 transition p-2"><Shuffle className="w-5 h-5" /></button>
-           <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipBack className="w-8 h-8" /></button>
-           
-           <button 
-             onClick={onTogglePlay}
-             className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-lg shadow-white/5"
-           >
-             {isPlaying ? <Pause className="w-6 h-6 fill-black text-black" /> : <Play className="w-6 h-6 fill-black text-black ml-1" />}
-           </button>
-           
-           <button className="text-slate-300 hover:text-white transition hover:scale-105 p-2"><SkipForward className="w-8 h-8" /></button>
-           <button className="text-slate-600 hover:text-sky-500 transition p-2"><Repeat className="w-5 h-5" /></button>
-        </div>
-
-        {/* Volume */}
-        <div className="flex items-center gap-4 w-full max-w-xs px-4 py-3 bg-zinc-900/50 rounded-lg border border-white/5">
-           <Volume2 className="w-4 h-4 text-slate-500" />
-           <input
-             type="range"
-             min="0"
-             max="1"
-             step="0.01"
-             value={volume}
-             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-             className="flex-1 h-1 bg-slate-700 rounded-sm appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-slate-400 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2"
-           />
-        </div>
-
       </div>
     </div>
   );
