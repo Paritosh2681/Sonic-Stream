@@ -63,6 +63,7 @@ const App: React.FC = () => {
 
   // Define refreshLibrary using useCallback
   const refreshLibrary = useCallback(async (userId: string) => {
+    if (userId === 'guest') return; // Guests don't sync
     try {
       console.log("Syncing library for user:", userId);
       const remoteTracks = await fetchUserTracks(userId);
@@ -86,10 +87,13 @@ const App: React.FC = () => {
         // Fetch immediately on login/restore
         refreshLibrary(currentUser.id);
       } else {
-        setUser(null);
-        setLibrary([]); // Clear library on logout
-        setCurrentSong(null);
-        setIsPlaying(false);
+        // Only clear if we aren't already in guest mode
+        setUser(prev => prev?.id === 'guest' ? prev : null);
+        if (user?.id !== 'guest') {
+           setLibrary([]); 
+           setCurrentSong(null);
+           setIsPlaying(false);
+        }
       }
     };
 
@@ -110,15 +114,28 @@ const App: React.FC = () => {
 
   // Fetch library when entering library view
   useEffect(() => {
-    if (view === 'library' && user) {
+    if (view === 'library' && user && user.id !== 'guest') {
       refreshLibrary(user.id);
     }
   }, [view, user, refreshLibrary]);
 
   const handleLogout = async () => {
+    if (user?.id === 'guest') {
+      setUser(null);
+      setLibrary([]);
+      setCurrentSong(null);
+      setIsPlaying(false);
+      setView('home');
+      return;
+    }
     const { error } = await supabase.auth.signOut();
     if (error) console.error('Error signing out:', error.message);
-    // State clearing handled by auth listener
+  };
+
+  const handleGuestLogin = () => {
+    setUser({ id: 'guest', username: 'Guest', email: '' });
+    setIsLoginOpen(false);
+    showNotification("Entered Guest Mode. Tracks will not be saved to cloud.", 'info');
   };
 
   const showNotification = (message: string, type: 'error' | 'success' | 'info') => {
@@ -128,10 +145,8 @@ const App: React.FC = () => {
   // Audio Handlers
   const handleUpload = async (file: File) => {
     // Strict check for auth before upload
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
-    if (!currentUser || !user) {
-      showNotification("Please sign in to upload music.", 'info');
+    if (!user) {
+      showNotification("Please sign in or continue as guest to upload music.", 'info');
       setIsLoginOpen(true);
       return;
     }
@@ -141,6 +156,39 @@ const App: React.FC = () => {
     let artist = 'Unknown Artist';
     let coverUrl: string | undefined = undefined;
 
+    // GUEST MODE UPLOAD LOGIC
+    if (user.id === 'guest') {
+        try {
+          const metadata = await extractMetadata(file);
+          title = metadata.title || title;
+          artist = metadata.artist || artist;
+          coverUrl = metadata.coverUrl;
+
+          const guestSong: Song = {
+            id: `guest-${Date.now()}`,
+            url: URL.createObjectURL(file), // Create local blob URL
+            name: title,
+            artist: artist,
+            duration: 0,
+            userId: 'guest',
+            file: file,
+            coverUrl: coverUrl
+          };
+
+          setLibrary(prev => [guestSong, ...prev]);
+          setCurrentSong(guestSong);
+          setIsPlaying(true);
+          setView('library');
+          showNotification("Playing local track (Guest Mode)", 'success');
+        } catch (e) {
+          showNotification("Failed to load local file", 'error');
+        } finally {
+          setIsUploading(false);
+        }
+        return;
+    }
+
+    // AUTHENTICATED UPLOAD LOGIC
     try {
       // 1. Extract Metadata
       const metadata = await extractMetadata(file);
@@ -149,7 +197,7 @@ const App: React.FC = () => {
       coverUrl = metadata.coverUrl;
 
       // 2. Upload to Supabase Storage & DB
-      const newSong = await uploadTrack(file, currentUser.id, {
+      const newSong = await uploadTrack(file, user.id, {
         title,
         artist,
         duration: 0 
@@ -187,46 +235,8 @@ const App: React.FC = () => {
       setIsPlaying(true);
       setView('library');
 
-      // Detailed Handling for RLS Errors
-      if (msg.includes("Storage Upload Failed") && msg.includes("security policy")) {
-        showNotification("Upload failed (Storage Permissions). Playing locally.", 'error');
-        
-        console.group('%c ⚠️ Supabase Storage RLS Policy Missing', 'color: #fbbf24; font-weight: bold; font-size: 14px;');
-        console.log('%cRun this SQL to fix Storage permissions:', 'color: #38bdf8;');
-        console.log(`
-create policy "Allow Individual Uploads" 
-on storage.objects for insert 
-to authenticated 
-with check ( bucket_id = 'audio' AND (storage.foldername(name))[1] = auth.uid()::text );
-
-create policy "Allow Individual View" 
-on storage.objects for select 
-to authenticated 
-using ( bucket_id = 'audio' AND (storage.foldername(name))[1] = auth.uid()::text );
-        `);
-        console.groupEnd();
-      } else if (msg.includes("Database Record Creation Failed") && msg.includes("security policy")) {
-        showNotification("Sync failed (Database Permissions). Playing locally.", 'error');
-
-        console.group('%c ⚠️ Supabase Database RLS Policy Missing', 'color: #fbbf24; font-weight: bold; font-size: 14px;');
-        console.log('%cRun this SQL to fix Database permissions:', 'color: #38bdf8;');
-        console.log(`
--- Run this in Supabase SQL Editor to fix the database error
-alter table tracks enable row level security;
-
-create policy "Users can insert their own tracks" 
-on tracks for insert 
-to authenticated 
-with check (auth.uid() = user_id);
-
-create policy "Users can view their own tracks" 
-on tracks for select 
-to authenticated 
-using (auth.uid() = user_id);
-        `);
-        console.groupEnd();
-      } else if (msg.includes("Bucket not found")) {
-         showNotification("Setup Error: 'audio' bucket missing. Playing locally.", 'error');
+      if (msg.includes("Storage Upload Failed")) {
+        showNotification("Upload failed (Storage). Playing locally.", 'error');
       } else {
         showNotification(`Playing locally. Cloud error: ${msg}`, 'error');
       }
@@ -311,7 +321,9 @@ using (auth.uid() = user_id);
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="text-center">
              <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-             <p className="text-white font-medium animate-pulse">Uploading & Syncing Database...</p>
+             <p className="text-white font-medium animate-pulse">
+               {user?.id === 'guest' ? 'Processing Local Audio...' : 'Uploading & Syncing...'}
+             </p>
           </div>
         </div>
       )}
@@ -395,6 +407,7 @@ using (auth.uid() = user_id);
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
+        onGuestLogin={handleGuestLogin}
       />
       
       {/* Spacer to prevent content from hiding behind mini player */}

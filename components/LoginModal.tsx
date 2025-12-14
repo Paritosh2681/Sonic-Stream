@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './Button';
-import { X, Lock, Mail, AlertCircle } from 'lucide-react';
+import { X, Lock, Mail, AlertCircle, UserX } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Kept for backward compatibility, but state is handled via Supabase listener in App.tsx
-  onLogin?: (username: string) => void; 
+  onGuestLogin: () => void;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onGuestLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -43,8 +42,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           password,
         });
         if (error) throw error;
-        // Supabase often sends a confirmation email, but sometimes auto-confirms depending on settings.
-        // For UX, we'll assume they need to check email or it just worked.
         alert("Account created! Please check your email for confirmation if required.");
         onClose();
       } else {
@@ -75,11 +72,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (error) throw error;
     } catch (err: any) {
       console.error("Google Login Error:", err);
-      
-      // Friendly error handling for common configuration issues
       let msg = err.message || "Google login failed";
       
-      // Check for disabled provider error
       if (
         msg.includes("provider is not enabled") || 
         msg.includes("Unsupported provider") ||
@@ -194,14 +188,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Sign Up' : 'Sign In')}
           </Button>
+        </form>
 
-          <div className="text-center text-sm text-slate-600">
+        {/* Guest Mode Option */}
+        <div className="mt-6 pt-4 border-t border-zinc-800 text-center">
+            <button 
+              onClick={onGuestLogin}
+              className="flex items-center justify-center gap-2 mx-auto text-zinc-500 hover:text-zinc-300 transition-colors text-sm group"
+            >
+              <UserX className="w-4 h-4" />
+              <span className="group-hover:underline">Continue as Guest (Offline Mode)</span>
+            </button>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-slate-600">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{' '}
             <button onClick={toggleMode} className="text-sky-500 hover:text-sky-400 font-medium hover:underline">
               {isSignUp ? "Sign In" : "Sign Up"}
             </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

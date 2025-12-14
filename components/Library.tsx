@@ -1,6 +1,6 @@
 import React from 'react';
 import { Song, User } from '../types';
-import { Play, Pause, Music, Disc, Cloud, RefreshCw } from 'lucide-react';
+import { Play, Pause, Music, Disc, Cloud, RefreshCw, CloudOff } from 'lucide-react';
 import { Button } from './Button';
 
 interface LibraryProps {
@@ -26,7 +26,8 @@ export const Library: React.FC<LibraryProps> = ({
   onLoginClick,
   onRefresh
 }) => {
-  
+  const isGuest = user?.id === 'guest';
+
   // 1. Not Logged In State
   if (!user) {
     return (
@@ -53,10 +54,11 @@ export const Library: React.FC<LibraryProps> = ({
         <div className="w-24 h-24 bg-zinc-900/50 rounded-full flex items-center justify-center mb-8 border border-zinc-800 animate-pulse">
           <Music className="w-10 h-10 text-zinc-600" />
         </div>
-        <h2 className="text-3xl font-heading text-white mb-4">Library Empty</h2>
+        <h2 className="text-3xl font-heading text-white mb-4">{isGuest ? 'Session Empty' : 'Library Empty'}</h2>
         <p className="text-zinc-500 max-w-md mb-8 leading-relaxed">
-          Your cloud collection is waiting. <br/>
-          Head back home to upload your first high-fidelity track.
+          {isGuest 
+            ? "You are in Guest Mode. Upload tracks to play them instantly." 
+            : "Your cloud collection is waiting. Head back home to upload your first high-fidelity track."}
         </p>
         <div className="flex gap-4">
           <button 
@@ -65,7 +67,7 @@ export const Library: React.FC<LibraryProps> = ({
           >
             Go to Upload
           </button>
-          {onRefresh && (
+          {!isGuest && onRefresh && (
             <button 
               onClick={onRefresh}
               className="px-4 py-3 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white rounded-lg transition-colors"
@@ -84,13 +86,20 @@ export const Library: React.FC<LibraryProps> = ({
     <div className="min-h-screen pt-32 pb-48 px-6 max-w-6xl mx-auto animate-[fadeIn_0.5s_ease-out]">
        <div className="flex items-end justify-between mb-12 border-b border-zinc-800 pb-6">
          <div>
-            <h2 className="text-4xl font-heading text-white mb-2">My Collection</h2>
+            <h2 className="text-4xl font-heading text-white mb-2">{isGuest ? 'Guest Session' : 'My Collection'}</h2>
             <div className="flex items-center gap-4">
-               <p className="text-zinc-500 text-sm flex items-center gap-2">
-                 <Cloud className="w-3 h-3" />
-                 Synced to {user.email}
-               </p>
-               {onRefresh && (
+               {isGuest ? (
+                 <p className="text-amber-500/80 text-sm flex items-center gap-2">
+                   <CloudOff className="w-3 h-3" />
+                   Offline Mode - Tracks vanish on refresh
+                 </p>
+               ) : (
+                 <p className="text-zinc-500 text-sm flex items-center gap-2">
+                   <Cloud className="w-3 h-3" />
+                   Synced to {user.email}
+                 </p>
+               )}
+               {!isGuest && onRefresh && (
                   <button 
                     onClick={onRefresh} 
                     className="text-zinc-600 hover:text-sky-500 transition-colors"
