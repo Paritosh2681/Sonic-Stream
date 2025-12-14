@@ -24,11 +24,12 @@ export const Hero: React.FC<HeroProps> = ({ onUpload, currentSong, onPlayClick, 
     <section className="relative min-h-[60vh] md:min-h-[70vh] flex items-center pt-32 pb-16 overflow-hidden">
       
       {/* Animated Blobs - Increased intensity for specific Hero glow */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-sky-600/30 rounded-full blur-[100px] animate-pulse opacity-60 mix-blend-screen"></div>
-      <div className="absolute bottom-0 left-[-10%] w-[600px] h-[600px] bg-indigo-900/40 rounded-full blur-[120px] animate-pulse opacity-50" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-sky-600/30 rounded-full blur-[100px] animate-pulse opacity-60 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute bottom-0 left-[-10%] w-[600px] h-[600px] bg-indigo-900/40 rounded-full blur-[120px] animate-pulse opacity-50 pointer-events-none" style={{ animationDelay: '2s' }}></div>
 
       <div className="relative z-10 container mx-auto px-6 md:px-12">
-        <div className="max-w-4xl space-y-6">
+        {/* Changed from ScrollReveal to standard div with animation class to guarantee visibility on load */}
+        <div className="max-w-4xl space-y-6 animate-fade-in-up opacity-0" style={{ animationFillMode: 'forwards' }}>
           
           {/* Social Proof Badge */}
           <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm mb-2 transition-colors hover:bg-white/10 cursor-default">

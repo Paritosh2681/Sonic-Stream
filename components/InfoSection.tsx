@@ -1,5 +1,6 @@
 import React from 'react';
 import { Zap, Maximize2 } from 'lucide-react';
+import { ScrollReveal } from './ScrollReveal';
 
 export const InfoSection: React.FC = () => {
   return (
@@ -10,7 +11,7 @@ export const InfoSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
         {/* Header - Left Aligned, austere */}
-        <div className="mb-20 max-w-2xl">
+        <ScrollReveal className="mb-20 max-w-2xl">
            <h2 className="text-4xl md:text-5xl font-heading text-white mb-6 leading-tight">
              System <br/><span className="text-zinc-600">Architecture</span>
            </h2>
@@ -19,13 +20,13 @@ export const InfoSection: React.FC = () => {
              Engineered for raw performance. <br className="hidden md:block"/>
              Capable of both offline isolation and secure cloud synchronization.
            </p>
-        </div>
+        </ScrollReveal>
 
         {/* The "Anti-Grid" Layout - Matte/Dark styling */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
           
-          {/* 1. Zero Latency - Matte black, strong borders, no background fill */}
-          <div className="md:col-span-7 border-l border-t border-zinc-800 p-8 md:p-12 min-h-[300px] flex flex-col justify-between bg-transparent hover:border-zinc-700 transition-colors duration-500">
+          {/* 1. Zero Latency */}
+          <ScrollReveal delay={100} className="md:col-span-7 border-l border-t border-zinc-800 p-8 md:p-12 min-h-[300px] flex flex-col justify-between bg-transparent hover:border-zinc-700 transition-colors duration-500">
              <div>
                <Zap className="w-8 h-8 text-sky-600 mb-6" strokeWidth={1.5} />
                <h3 className="text-3xl text-white font-light mb-4">Zero-Latency Playback</h3>
@@ -33,10 +34,10 @@ export const InfoSection: React.FC = () => {
              <p className="text-zinc-500 text-lg leading-relaxed max-w-md">
                 Whether loading a local blob or streaming a synced track, our optimized buffering engine ensures instant response times.
              </p>
-          </div>
+          </ScrollReveal>
 
-          {/* 2. Hybrid Mode - Deep black, minimal effect */}
-          <div className="md:col-span-5 bg-black border border-zinc-800 p-6 flex flex-col justify-center items-start relative overflow-hidden group">
+          {/* 2. Hybrid Mode */}
+          <ScrollReveal delay={200} className="md:col-span-5 bg-black border border-zinc-800 p-6 flex flex-col justify-center items-start relative overflow-hidden group">
              {/* Very subtle noise on hover only */}
              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')] transition-opacity duration-700"></div>
              
@@ -54,19 +55,19 @@ export const InfoSection: React.FC = () => {
                  Seamlessly switch between ephemeral local sessions and persistent cloud libraries.
                </p>
              </div>
-          </div>
+          </ScrollReveal>
 
-          {/* 3. Responsive - Transparent, sharp borders */}
-          <div className="md:col-span-4 border-r border-b border-zinc-800 p-8 flex flex-col justify-end min-h-[280px] hover:border-zinc-700 transition-colors">
+          {/* 3. Responsive */}
+          <ScrollReveal delay={300} className="md:col-span-4 border-r border-b border-zinc-800 p-8 flex flex-col justify-end min-h-[280px] hover:border-zinc-700 transition-colors">
              <Maximize2 className="w-6 h-6 text-zinc-600 mb-auto" />
              <h3 className="text-white text-lg font-medium mb-2">Adaptive Viewport</h3>
              <p className="text-zinc-500 text-sm">
                The interface scales mathematically to any density, providing a consistent experience on desktop or mobile.
              </p>
-          </div>
+          </ScrollReveal>
 
-          {/* 4. Audio Specs - Solid black, horizontal, no gradient */}
-          <div className="md:col-span-8 border-y border-zinc-800 p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-black">
+          {/* 4. Audio Specs */}
+          <ScrollReveal delay={400} className="md:col-span-8 border-y border-zinc-800 p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 bg-black">
              <div className="max-w-md">
                <h3 className="text-2xl text-white font-light mb-2">Lossless Audio Engine</h3>
                <p className="text-zinc-500">
@@ -80,7 +81,7 @@ export const InfoSection: React.FC = () => {
                 <span className="text-sky-900/60">16-bit / 24-bit</span>
                 <span className="text-sky-900/60">Stereo / Mono</span>
              </div>
-          </div>
+          </ScrollReveal>
 
         </div>
       </div>

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Shield, Cloud, HardDrive } from 'lucide-react';
+import { ScrollReveal } from './ScrollReveal';
 
 export const WhyLocal: React.FC = () => {
   return (
     <section id="why-local" className="py-24 bg-black relative border-t border-zinc-900">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div>
+          
+          <ScrollReveal>
             <h2 className="text-4xl md:text-5xl font-heading text-white mb-6">
               The Best of <br />
               <span className="text-sky-500">Both Worlds</span>
@@ -46,9 +48,9 @@ export const WhyLocal: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div className="relative mt-12 md:mt-0">
+          <ScrollReveal delay={200} className="relative mt-12 md:mt-0">
             {/* Abstract visual representation of quality comparison */}
             <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/10 to-purple-500/10 blur-3xl rounded-full"></div>
             <div className="relative bg-zinc-950/50 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
@@ -90,7 +92,7 @@ export const WhyLocal: React.FC = () => {
                   </div>
                </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
